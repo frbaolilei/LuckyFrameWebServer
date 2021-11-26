@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.luckyframe.project.qualitymanagmt.taskFailCaseStatistics.mapper.TaskFailCaseStatisticsMapper">
+
+	<resultMap type="TaskFailCaseStatistics" id="TaskFailCaseStatisticsResult">
+		<result property="id" column="id" />
+		<result property="taskId" column="task_id" />
+		<result property="projectId" column="project_id" />
+		<result property="caseId" column="case_id" />
+		<result property="taskCaseId" column="task_case_id" />
+		<result property="caseSign" column="case_sign" />
+		<result property="caseName" column="case_name" />
+		<result property="failCause" column="fail_cause" />
+		<result property="finishTime" column="finish_time" />
+		<result property="createBy" column="create_by" />
+		<result property="createTime" column="create_time" />
+		<result property="updateBy" column="update_by" />
+		<result property="updateTime" column="update_time" />
+		<result property="failRemark" column="fail_remark" />
+		<result property="bugLink" column="bug_link" />
+		<result property="isDeleted" column="is_deleted" />
+	</resultMap>
+
+	<resultMap type="Map" id="BaseResultMap">
+		<result column="selectName" property="selectName" />
+		<result column="selectValue" property="selectValue" />
+	</resultMap>
+
+	<sql id="selectTaskFailCaseStatisticsVo">
+		select tfca.id, tfca.task_id, tfca.project_id,
+		tfca.case_id,
+		tfca.task_case_id, tfca.case_sign, tfca.case_name,
+		tfca.fail_cause,
+		tfca.finish_time, tfca.create_by, tfca.create_time,
+		tfca.update_by,
+		tfca.update_time, tfca.fail_remark, tfca.bug_link,
+		tfca.is_deleted
+		from task_fail_case_statistics
+		tfca left join
+		sys_project sp on tfca.project_id = sp.project_id
+	</sql>
+
+	<select id="selectTaskFailCaseStatisticsList" parameterType="TaskFailCaseStatistics"
+		resultMap="TaskFailCaseStatisticsResult">
+		<include refid="selectTaskFailCaseStatisticsVo" />
+		<where>
+			<if test="id != null "> and tfca.id = #{id}</if>
+			<if test="taskId != null "> and tfca.task_id = #{taskId}</if>
+			<if test="projectId != null and projectId != '' "> and tfca.project_id = #{projectId}</if>
+			<if test="caseId != null "> and tfca.case_id = #{caseId}</if>
+			<if test="taskCaseId != null "> and tfca.task_case_id = #{taskCaseId}</if>
+			<if test="caseSign != null  and caseSign != '' "> and tfca.case_sign = #{caseSign}</if>
+			<if test="caseName != null  and caseName != '' "> and tfca.case_name = #{caseName}</if>
+			<if test="failCause != null and failCause != '' "> and tfca.fail_cause = #{failCause}</if>
+			<if test="finishTime != null "> and tfca.finish_time = #{finishTime}</if>
+			<if test="createBy != null  and createBy != '' "> and tfca.create_by = #{createBy}</if>
+			<if test="createTime != null "> and tfca.create_time = #{createTime}</if>
+			<if test="updateBy != null  and updateBy != '' "> and tfca.update_by = #{updateBy}</if>
+			<if test="updateTime != null "> and tfca.update_time = #{updateTime}</if>
+			<if test="failRemark != null  and failRemark != '' "> and tfca.fail_remark = #{failRemark}</if>
+			<if test="bugLink != null  and bugLink != '' "> and tfca.bug_link = #{bugLink}</if>
+			and tfca.is_deleted='0'
+		</where>
+		order by tfca.finish_time desc
+	</select>
+
+	<select id="selectTaskFailCaseStatisticsById" parameterType="Integer"
+		resultMap="TaskFailCaseStatisticsResult">
+		<include refid="selectTaskFailCaseStatisticsVo" />
+		where id = #{id}
+	</select>
+
+	<insert id="insertTaskFailCaseStatistics" parameterType="TaskFailCaseStatistics"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into task_fail_case_statistics
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="taskId != null  ">task_id,</if>
+			<if test="projectId != null  ">project_id,</if>
+			<if test="caseId != null  ">case_id,</if>
+			<if test="taskCaseId != null  ">task_case_id,</if>
+			<if test="caseSign != null  and caseSign != ''  ">case_sign,</if>
+			<if test="caseName != null  and caseName != ''  ">case_name,</if>
+			<if test="failCause != null  ">fail_cause,</if>
+			<if test="finishTime != null  ">finish_time,</if>
+			<if test="createBy != null  and createBy != ''  ">create_by,</if>
+			<if test="createTime != null  ">create_time,</if>
+			<if test="updateBy != null  and updateBy != ''  ">update_by,</if>
+			<if test="updateTime != null  ">update_time,</if>
+			<if test="failRemark != null  and failRemark != ''  ">fail_remark,</if>
+			<if test="bugLink != null  and bugLink != ''  ">bug_link,</if>
+			<if test="isDeleted != null  ">is_deleted,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="taskId != null  ">#{taskId},</if>
+			<if test="projectId != null  ">#{projectId},</if>
+			<if test="caseId != null  ">#{caseId},</if>
+			<if test="taskCaseId != null  ">#{taskCaseId},</if>
+			<if test="caseSign != null  and caseSign != ''  ">#{caseSign},</if>
+			<if test="caseName != null  and caseName != ''  ">#{caseName},</if>
+			<if test="failCause != null  ">#{failCause},</if>
+			<if test="finishTime != null  ">#{finishTime},</if>
+			<if test="createBy != null  and createBy != ''  ">#{createBy},</if>
+			<if test="createTime != null  ">#{createTime},</if>
+			<if test="updateBy != null  and updateBy != ''  ">#{updateBy},</if>
+			<if test="updateTime != null  ">#{updateTime},</if>
+			<if test="failRemark != null  and failRemark != ''  ">#{failRemark},</if>
+			<if test="bugLink != null  and bugLink != ''  ">#{bugLink},</if>
+			<if test="isDeleted != null  ">#{isDeleted},</if>
+		</trim>
+	</insert>
+
+	<update id="updateTaskFailCaseStatistics" parameterType="TaskFailCaseStatistics">
+		update task_fail_case_statistics
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="taskId != null  ">task_id = #{taskId},</if>
+			<if test="projectId != null  ">project_id = #{projectId},</if>
+			<if test="caseId != null  ">case_id = #{caseId},</if>
+			<if test="taskCaseId != null  ">task_case_id = #{taskCaseId},</if>
+			<if test="caseSign != null  and caseSign != ''  ">case_sign = #{caseSign},</if>
+			<if test="caseName != null  and caseName != ''  ">case_name = #{caseName},</if>
+			<if test="failCause != null  ">fail_cause = #{failCause},</if>
+			<if test="finishTime != null  ">finish_time = #{finishTime},</if>
+			<if test="createBy != null  and createBy != ''  ">create_by = #{createBy},</if>
+			<if test="createTime != null  ">create_time = #{createTime},</if>
+			<if test="updateBy != null  and updateBy != ''  ">update_by = #{updateBy},</if>
+			<if test="updateTime != null  ">update_time = #{updateTime},</if>
+			<if test="failRemark != null  and failRemark != ''  ">fail_remark = #{failRemark},</if>
+			<if test="bugLink != null  and bugLink != ''  ">bug_link = #{bugLink},</if>
+			<if test="isDeleted != null  ">is_deleted = #{isDeleted},</if>
+		</trim>
+		where id = #{id}
+	</update>
+
+	<select id="selectGroupByFailCaseType" parameterType="TaskFailCaseStatistics"
+		resultMap="BaseResultMap">
+		select fail_cause as selectName
+		<trim prefix="," suffix=" " suffixOverrides=",">
+			<if test="failCause != null  and failCause != ''  ">COUNT(fail_cause) as selectValue,</if>
+		</trim>
+		from task_fail_case_statistics
+		<where>
+			<if test="projectId != null "> and project_id = #{projectId}</if>
+			<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+				and date_format(finish_time,'%y%m%d') &gt;=
+				date_format(#{params.beginTime},'%y%m%d')
+			</if>
+			<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+				and date_format(finish_time,'%y%m%d') &lt;=
+				date_format(#{params.endTime},'%y%m%d')
+			</if>
+			and is_deleted='0'
+		</where>
+		GROUP BY fail_cause
+	</select>
+
+	<delete id="deleteTaskFailCaseStatisticsById" parameterType="Integer">
+		delete from task_fail_case_statistics where id = #{id}
+	</delete>
+
+	<delete id="deleteTaskFailCaseStatisticsByIds" parameterType="String">
+		delete from task_fail_case_statistics where id in
+		<foreach item="id" collection="array" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

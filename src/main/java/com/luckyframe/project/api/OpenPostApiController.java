@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.luckyframe.project.qualitymanagmt.taskFailCaseStatistics.domain.TaskFailCaseStatistics;
+import com.luckyframe.project.qualitymanagmt.taskFailCaseStatistics.service.ITaskFailCaseStatisticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -43,7 +45,10 @@ import com.luckyframe.project.testmanagmt.projectCase.service.IProjectCaseServic
 public class OpenPostApiController
 {
     private static final Logger log = LoggerFactory.getLogger(OpenPostApiController.class);
-	
+
+	@Resource
+	private ITaskFailCaseStatisticsService taskFailCaseStatisticsService;
+
 	@Resource
 	private ITaskExecuteService taskExecuteService;
 	
@@ -113,6 +118,39 @@ public class OpenPostApiController
 		}else{
 			return "提交用例执行明细失败！";
 		}		
+	}
+
+	/**
+	 * 增加失败用例记录
+	 * @param jsonObject 请求json对象
+	 * @return 返回增加日志结果
+	 * @author Seagull
+	 * @date 2019年4月16日
+	 */
+	@PostMapping("/clientPostTaskCaseFailStatistics")
+	@ResponseBody
+	public String clientPostTaskCaseFailStatistics(@RequestBody JSONObject jsonObject) {
+		// 更新实体
+		int result = 0;
+		try {
+			TaskFailCaseStatistics taskCaseFail = JSONObject.parseObject(jsonObject.toJSONString(), TaskFailCaseStatistics.class);
+			TaskCaseExecute tce = new TaskCaseExecute();
+			tce.setTaskId(taskCaseFail.getTaskId());
+			tce.setCaseId(taskCaseFail.getCaseId());
+			TaskCaseExecute taskCaseExecute = taskCaseExecuteService.selectTaskCaseExecuteByTaskIdAndCaseId(tce);
+
+			taskCaseFail.setCreateTime(taskCaseExecute.getCreateTime());
+			taskCaseFail.setFinishTime(taskCaseExecute.getFinishTime());
+			taskCaseFail.setTaskCaseId(taskCaseExecute.getTaskCaseId());
+			result = taskFailCaseStatisticsService.insertTaskFailCaseStatistics(taskCaseFail);
+		} catch (Exception e) {
+			log.error("增加失败用例记录出现异常", e);
+		}
+		if(result>0){
+			return "提交失败用例记录成功！";
+		}else{
+			return "提交失败用例记录失败！";
+		}
 	}
 
 	/**

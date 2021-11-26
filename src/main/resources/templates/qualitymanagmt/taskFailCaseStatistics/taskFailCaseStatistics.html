@@ -1,0 +1,311 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="gray-bg">
+
+	<div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="formId">
+					<div class="select-list">
+						<ul>
+							<li>项目： <select id="projectId" name="projectId"
+								th:with="type=${projects}">
+									<option value="">所有项目</option>
+									<option th:each="projects : ${type}"
+										th:text="${projects.projectName}"
+										th:value="${projects.projectId}"
+										th:selected="${projects.projectId == defaultProjectId}"></option>
+							</select>
+							</li>
+
+							<li>用例标识：<input type="text" name="caseSign" />
+							</li>
+
+							<li>用例名称：<input type="text" name="caseName" />
+							</li>
+							<li>失败原因：<select name="failCause" id="failCause"
+								th:with="type=${@dict.getType('case_fail_cause')}">
+									<option value="">所有</option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}"
+										th:value="${dict.dictLabel}"
+										th:selected="${dict.dictValue == defaultCaseStatus}"></option>
+							</select>
+							</li>
+							<li><a class="btn btn-primary btn-rounded btn-sm"
+								onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm"
+								onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+
+			<div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<shiro:hasPermission
+					name="qualitymanagmt:taskFailCaseStatistics:edit">
+					<a class="btn btn-primary btn-edit disabled"
+						onclick="$.operate.edit()"> <i class="fa fa-edit"></i> 修改
+					</a>
+				</shiro:hasPermission>
+				<a class="btn btn-info" onclick="showQueryGraph()"> <i
+					class="fa fa-pie-chart"></i> 图形分析
+				</a>
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"
+					style="table-layout: fixed"></table>
+			</div>
+		</div>
+	</div>
+	<div th:include="include :: footer"></div>
+	<script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('qualitymanagmt:taskFailCaseStatistics:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('qualitymanagmt:taskFailCaseStatistics:remove')}]];
+        var prefix = ctx + "qualitymanagmt/taskFailCaseStatistics";
+        var logPrefix = ctx + "testexecution/taskCaseLog";
+
+        $(function() {
+        	
+			//初始化子表格(无限循环)
+ 			const InitSubTable = function (index, row, $detail) {
+				const cur_table = $detail.html('<table style="word-break:break-all;"></table>').find('table');
+				$(cur_table).bootstrapTable({
+					url: logPrefix + "/list",
+					method: 'get',
+					queryParams: {
+						taskCaseId: row.taskCaseId
+					},
+					clickToSelect: false,
+					detailView: false,//父子表
+					uniqueId: "logId",
+					columns: [{
+						field: 'logId',
+						title: '序号',
+						width: '5%',
+						formatter: function (value, row, index) {
+							return '<p align="center">' + (index + 1) + '</p>';
+						}
+					},
+						{
+							field: 'logStep',
+							title: '步骤编号',
+							width: '8%',
+							formatter: function (value,
+												 row, index) {
+								if (value != "ending") {
+									return "步骤_" + value;
+								} else {
+									return '<font style="color:#00bf5f">' + value + '</font>';
+								}
+
+							}
+						}, {
+							field: 'logDetail',
+							title: '日志明细',
+							width: '65%',
+							cellStyle: function (value, row, index, field) {
+								if (row.logGrade != "info") {
+									return {
+										css: {"color": "#ff0000"}
+									};
+								} else {
+									return {
+										css: {"color": "#00bf5f"}
+									};
+								}
+							}
+						}, {
+							field: 'createTime',
+							title: '日志时间',
+							width: '12%',
+							formatter: function (value,
+												 row, index) {
+								return $.common.formatTime(value);
+							}
+						}, {
+							field: 'logGrade',
+							title: '日志级别',
+							width: '10%',
+							formatter: function (value,
+												 row, index) {
+								if (row.imgname == null) {
+									if (value != 'info') {
+										if (row.logDetail.indexOf('测试结果：') > 0) {
+											return '<font style="color:#ff0000">' + value + '</font>&nbsp;&nbsp;&nbsp;&nbsp;' +
+													'<a href="#" onclick="updateStep(' + row.logId + ')"></a> ';
+										} else {
+											return '<font style="color:#ff0000">' + value + '</font>';
+										}
+									} else {
+										return '<font style="color:#00bf5f">' + value + '</font>';
+									}
+								} else {
+									return '<font style="color:#ff0000">' + value + '</font>&nbsp;&nbsp;&nbsp;&nbsp;' +
+											'<a onclick="showPlanCase(' + row.logId + ')">错误截图</a> ';
+								}
+							}
+						},],
+					//无线循环取子表，直到子表里面没有记录
+					onExpandRow: function (index, row, $Subdetail) {
+						oInit.InitSubTable(index, row, $Subdetail);
+					},
+
+				});
+			}; 
+			
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                customUrl: prefix + "/showFailCaseDetail/{id}",
+                removeUrl: prefix + "/remove",
+				exportUrl: prefix + "/export",
+                modalName: "失败用例记录分析",
+				search: false,
+				queryParams: function(params) {
+	            	return {
+	        			// 传递参数查询参数
+	                    pageSize:       params.limit,
+	                    pageNum:        params.offset / params.limit + 1,
+	                    searchValue:    params.search,
+	                    orderByColumn:  params.sort,
+	                    isAsc:          params.order,
+	                    isDeleted:      0,
+/* 	                    caseName:       $('#caseName').val(),
+	                    failCause:      $('#failCause').val(), */
+	                    projectId:      $('#projectId').val()
+	        		};
+				},
+		        showExport: true,
+		        detailView: true, //是否显示父子表
+                columns: [{
+		            checkbox: true
+		        },
+				{
+					field : 'id', 
+					title : '主键ID',
+					sortable: true,
+					visible: false
+				},
+				{
+					field : 'taskCaseId', 
+					title : '用例执行ID',
+					sortable: true,
+					visible: false
+				},
+				{
+					field : 'taskId', 
+					title : '任务ID',
+					visible: false
+				},
+				{
+					field : 'projectId', 
+					title : '项目ID',
+					visible: false
+				},
+				{
+					field : 'caseId', 
+					title : '用例ID',
+					visible: false
+				},
+				{
+					field : 'caseSign', 
+					width : '10%',
+					title : '用例标识',
+					class : 'myTDLengthHidden'
+				},
+				{
+					field : 'caseName', 
+					width : '50%',
+					title : '用例名称',
+					class : 'myTDLengthHidden'
+				},
+				{
+					field : 'createTime', 
+					title : '开始时间',
+					width : '15%',
+					class : 'myTDLengthHidden'
+				},
+				{
+					field : 'finishTime', 
+					title : '结束时间',
+					width : '15%',
+					formatter : function(value,
+							row, index) {
+						if(value==null){
+							return "";
+						}else{
+							return value;
+						}
+					}
+				},
+				{
+					field : 'failCause', 
+					title : '失败原因',
+					width : '10%',
+					class : 'myTDLengthHidden',
+					formatter : function(value,
+							row, index) {
+						if(value=='bug'){
+							return '<span style="color:#00bf5f">bug</span>';
+						}else if(value=='测试数据变更'){
+							return '<span style="color:#FFA500">测试数据变更</span>';
+						}else if(value=='需求变更'){
+							return '<span style="color:#FFA500">需求变更</span>';
+						}else if(value=='环境'){
+							return '<span style="color:#FFA500">环境</span>';
+						}else if(value=='脚本'){
+							return '<span style="color:#FFA500">脚本</span>';
+						}else if(value=='其它'){
+							return '<span style="color:#FFA500">其它</span>';
+						}else{
+							return '<span style="color:#ff0000">未处理</span>';
+						}
+					}
+				},
+  				{
+					field : 'failRemark', 
+					title : '失败说明',
+					width : '10%',
+					class : 'myTDLengthHidden'
+				},
+ 		        {
+		            title: '操作',
+		            align: 'center',
+					width : '5%',
+ 			        formatter: function(value, row, index) {
+			            	var actions = [];
+			            	actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="#" onclick="showAccidentDetail('+row.id+')"><i class="fa fa-file-text"></i> 详情</a> ');                      
+							return actions.join('');
+			            } 
+		        }],  
+				   
+			//注册加载子表的事件。注意下这里的三个参数！
+ 			onExpandRow : function(index, row, $detail) {
+				InitSubTable(index, row, $detail);
+			} 
+        };
+            
+        $.table.init(options);
+    });
+        
+        /*查看生产事故详细内容*/
+        function showAccidentDetail(id) {       	
+        	var url = "/404.html";
+        	if ($.common.isNotEmpty(id)) {
+        	    url = $.table._option.customUrl.replace("{id}", id);
+        	}
+        	$.modal.openViewFull("失败用例详情", url, null, null);
+        }
+        /*弹出层查看图形分析*/
+          function showQueryGraph() {
+        	var url = prefix+"/queryGraph";
+        	 $.modal.open("查看图表", url,null,null,"查看");
+        }  
+    </script>
+</body>
+</html>

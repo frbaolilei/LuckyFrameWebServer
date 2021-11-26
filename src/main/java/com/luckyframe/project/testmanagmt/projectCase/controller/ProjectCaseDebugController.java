@@ -2,7 +2,10 @@ package com.luckyframe.project.testmanagmt.projectCase.controller;
 
 import java.util.List;
 
+import com.luckyframe.LuckyFrameWebApplication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -47,6 +50,8 @@ public class ProjectCaseDebugController extends BaseController
 	
 	@Autowired
 	private IClientService clientService;
+
+	private static final Logger log = LoggerFactory.getLogger(ProjectCaseDebugController.class);
 	
 	/**
 	 * 测试用例Debug
@@ -98,7 +103,12 @@ public class ProjectCaseDebugController extends BaseController
 			Client client = clientService.selectClientById(projectCaseDebug.getClientId());
 			String url= "http://"+client.getClientIp()+":"+ClientConstants.CLIENT_MONITOR_PORT+"/webDebugCase";
 			String result=HttpRequest.httpClientPost(url, client,JSONObject.toJSONString(webDebugCaseEntity),3000);
-			
+
+			String s = new String(result.getBytes(),"UTF-8");
+			String sg = new String(result.getBytes(),"GBK");
+
+			log.info("s  ="+s);
+			log.info("sg  ="+sg);
 			if(result.contains("正常")){
 				json.put("status", "info");
 			}else{

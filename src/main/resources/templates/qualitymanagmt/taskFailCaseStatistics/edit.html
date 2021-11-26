@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<link th:href="@{/ajax/libs/datapicker/bootstrap-datetimepicker.min.css}" rel="stylesheet"/>
+<head th:include="include :: header"></head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-taskFailCaseStatistics-edit"
+			th:object="${taskFailCaseStatistics}">
+			<input id="id" name="id" th:field="*{id}"
+				type="hidden">
+			<div class="form-group">
+				<label class="col-sm-3 control-label" >用例名称：</label>
+				<div class="col-sm-8">
+					<input id="caseName" name="caseName" th:field="*{caseName}"
+						class="form-control" type="text" readonly>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">失败原因：</label>
+				<div class="col-sm-8">
+					<select class="form-control m-b" id="failCause"
+						name="failCause"
+						th:with="type=${@dict.getType('case_fail_cause')}">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}"
+							th:value="${dict.dictLabel}"
+							th:selected="${dict.dictLabel == taskFailCaseStatistics.failCause}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">失败说明：</label>
+				<div class="col-sm-8">
+					<input id="failRemark" name="failRemark" th:field="*{failRemark}"
+						class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">关联bug链接：</label>
+				<div class="col-sm-8">
+					<input id="bugLink" name="bugLink" th:field="*{bugLink}"
+						class="form-control" type="text">
+				</div>
+			</div>
+		</form>
+	</div>
+	<div th:include="include::footer"></div>
+	<script th:src="@{/ajax/libs/datapicker/bootstrap-datetimepicker.min.js}"></script>
+	<script type="text/javascript">
+		var prefix = ctx + "qualitymanagmt/taskFailCaseStatistics";
+		$("#form-taskFailCaseStatistics-edit").validate({
+			rules : {
+				caseName : {
+					required : true,
+				},
+				failCause : {
+					required : true,
+				},
+/* 				failRemark : {
+					required : true,
+				},
+				bugLink : {
+					required : true,
+				}, */
+			}
+		});
+
+		function submitHandler() {
+			if ($.validate.form()) {
+				$.operate.save(prefix + "/edit", $(
+						'#form-taskFailCaseStatistics-edit').serialize());
+			}
+		}
+	</script>
+</body>
+</html>

@@ -11,13 +11,13 @@ luckyframe:
 # netty配置
 netty:
   url: 0.0.0.0
-  port: 7071
+  port: 7070
   # netty通信编码，防止乱码
   socketChannel:
     # 编码格式
     encoder: UTF_8
     # 解码格式
-    decoder: GBK
+    decoder: UTF_8
 # 开发环境配置
 server:
   # 服务端口
